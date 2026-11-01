@@ -201,3 +201,16 @@ input[type=range]{width:100%;height:40px;accent-color:var(--grape)}
 .pedit .row input{width:28px;height:28px}
 @media (orientation:portrait){.whocard{width:min(320px,42vw)}}
 @media (max-width:700px){.mch{height:84px;font-size:40px}.mq{font-size:36px}}
+
+/* v3 featured pack covers */
+.packs{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.packs:empty{display:none}
+.pack{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:16px 18px;border-radius:26px;color:#fff;text-align:left;box-shadow:0 5px 0 rgba(0,0,0,.14);overflow:hidden}
+.pack:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.14)}
+.pack .pimgs{display:flex;gap:8px}
+.pack .pimgs img{width:78px;height:78px;border-radius:16px;image-rendering:pixelated;background:#fff;border:3px solid rgba(255,255,255,.9);box-shadow:0 3px 8px rgba(0,0,0,.18)}
+.pack .pimgs img:nth-child(2){transform:rotate(-5deg) translateY(-4px)}
+.pack .ptxt b{display:block;font-size:26px;font-weight:900;text-shadow:0 2px 0 rgba(0,0,0,.18)}
+.pack .ptxt small{font-size:15px;font-weight:800;opacity:.95}
+.pack .pnew{position:absolute;top:12px;right:14px;background:#fff;color:#ff4fa3;font-weight:900;font-size:14px;padding:4px 10px;border-radius:999px;letter-spacing:1px}
+@media (max-width:640px){.packs{grid-template-columns:1fr}}

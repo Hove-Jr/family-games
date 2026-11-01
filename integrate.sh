@@ -10,7 +10,7 @@ ID="${1:?id}"; SRC="${2:?src_dir}"; NAME="${3:-}"; EMOJI="${4:-}"; COLOR="${5:-}
 [ -f "$SRC/index.html" ] || { echo "no index.html in $SRC"; exit 1; }
 DST="$HUB/games/$ID"
 rm -rf "$DST"; mkdir -p "$DST"
-tar -C "$SRC" --exclude='./screens' --exclude='./screenshots' --exclude='node_modules' --exclude='*.md' --exclude='*.zip' \
+tar -C "$SRC" --exclude='./screens' --exclude='./screens-new' --exclude='./screenshots' --exclude='node_modules' --exclude='*.md' --exclude='*.zip' \
   --exclude='./sw.js' --exclude='test*.js' --exclude='*.log' --exclude='./.*' -cf - . | tar -C "$DST" -xf -
 python3 - "$HUB" "$ID" "$NAME" "$EMOJI" "$COLOR" <<'PY'
 import sys, os, re, json, shutil

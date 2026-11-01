@@ -56,10 +56,15 @@
 
   // ---------- catalog ----------
   const CATS = [
-    ['kpop', '🎤 K-Pop Hunters'], ['blocky', '⛏️ Blocky World'], ['monsters', '👾 Monsters'], ['cars', '🏎️ Cars'], ['animals', '🐯 Animals'], ['dinos', '🦖 Dinos'], ['sports', '⚽ Sports'], ['holidays', '🎃 Holidays'],
+    ['kstars', '🌟 K-Pop Stars'], ['people', '🧑 People'], ['kpop', '🎤 K-Pop Hunters'], ['blocky', '⛏️ Blocky World'], ['monsters', '👾 Monsters'], ['cars', '🏎️ Cars'], ['animals', '🐯 Animals'], ['dinos', '🦖 Dinos'], ['sports', '⚽ Sports'], ['holidays', '🎃 Holidays'],
     ['fantasy', '🐉 Fantasy'], ['space', '🚀 Space'], ['ocean', '🐙 Ocean'], ['food', '🍕 Food'], ['vehicles', '🚒 Vehicles'], ['mine', '📸 My Pictures'],
   ];
   const CATNAME = Object.fromEntries(CATS);
+  // featured pack covers shown above the chips (newest packs)
+  const PACKS = [
+    { cat: 'kstars', title: 'K-Pop Stars', sub: 'Sing, dance & sparkle!', cover: ['ks-pink', 'ks-stick', 'ks-blue'], bg: 'linear-gradient(135deg,#ff7ac6,#8b3ff7 70%,#3a1f8f)' },
+    { cat: 'people', title: 'People', sub: 'Heroes, friends & family', cover: ['pp-fire', 'pp-astro', 'pp-princess'], bg: 'linear-gradient(135deg,#ffd23f,#ff8c1a 55%,#ff5a5a)' },
+  ];
   const builtins = PICS.map((d) => PixArt.compile(d));
   const byId = new Map(builtins.map((p) => [p.id, p]));
   function loadCustom() {
@@ -142,6 +147,8 @@
     }
     return c;
   }
+  const coverCache = new Map();
+  function coverURL(p) { let u = coverCache.get(p.id); if (!u) { u = renderThumb(p, { d: 1, s: '' }).toDataURL(); coverCache.set(p.id, u); } return u; }
   function thumbURL(p) {
     const pr = getProg(p.id); const key = p.id + ':' + (pr ? pr.t : 0);
     let u = thumbCache.get(key); if (!u) { u = renderThumb(p, pr).toDataURL(); thumbCache.set(key, u); }
@@ -269,11 +276,13 @@
     $('#lvl-home').innerHTML = levelBar();
     const dp = dailyPuzzle(), dpr = getProg(dp.id);
     $('#daily').innerHTML = `<img alt="" src="${thumbURL(dp)}"><div style="flex:1"><div class="dt">⭐ Today's Picture</div><div class="dn">${esc(dp.name)}</div><button class="bigbtn small pink" data-id="${dp.id}" data-daily="1">${dpr && dpr.d ? '✅ Done! View' : dpr ? '▶️ Keep going' : '▶️ Play'}</button></div>`;
+    $('#packs').innerHTML = libCat === 'all' ? PACKS.map((k) => { const n = builtins.filter((p) => p.cat === k.cat).length; return `<button class="pack" data-cat="${k.cat}" style="background:${k.bg}"><span class="pnew">NEW</span><span class="pimgs">${k.cover.map((id) => byId.get(id)).filter(Boolean).map((p) => `<img alt="" src="${coverURL(p)}">`).join('')}</span><span class="ptxt"><b>${esc(k.title)}</b><small>${esc(k.sub)} · ${n} pictures</small></span></button>`; }).join('') : '';
     $('#chips').innerHTML = [['all', '🌈 All']].concat(CATS).map(([k, n]) => `<button class="chip ${libCat === k ? 'on' : ''}" data-cat="${k}">${n}</button>`).join('');
     let list = libCat === 'all' ? CATS.flatMap(([k]) => allPuzzles().filter((p) => p.cat === k)) : allPuzzles().filter((p) => p.cat === libCat);
     list = list.filter((p) => !isLocked(p)).concat(list.filter((p) => isLocked(p)).sort((a, b) => needLevel(a) - needLevel(b)));
     $('#lib').innerHTML = list.length ? list.map((p) => card(p)).join('') : `<div class="empty">No pictures here yet!<br><br><button class="bigbtn grape" data-gonav="photo">📸 Make one from a photo</button></div>`;
   }
+  $('#packs').addEventListener('click', (e) => { const b = e.target.closest('.pack'); if (!b) return; SND.tap(); libCat = b.dataset.cat; renderLibrary(); $('#s-home .scroll').scrollTop = 0; });
   $('#chips').addEventListener('click', (e) => { const b = e.target.closest('.chip'); if (!b) return; SND.tap(); libCat = b.dataset.cat; renderLibrary(); $('#s-home .scroll').scrollTop = 0; });
   document.addEventListener('click', (e) => {
     const g = e.target.closest('[data-gonav]'); if (g) { show(g.dataset.gonav); return; }
@@ -373,6 +382,8 @@
     { id: 'ten', e: '🏆', t: 'Champion', h: 'Finish 10 pictures', ok: () => stats.completed.length >= 10 },
     { id: 'tf', e: '👑', t: 'Color King', h: 'Finish 25 pictures', ok: () => stats.completed.length >= 25 },
     { id: 'fifty', e: '💎', t: 'Legend', h: 'Finish 50 pictures', ok: () => stats.completed.length >= 50 },
+    { id: 'c-kstars', e: '🌟', t: 'Pop Idol', h: 'Finish a K-Pop Stars picture', ok: () => catDone('kstars') },
+    { id: 'c-people', e: '🧑‍🚀', t: 'People Pal', h: 'Finish a People picture', ok: () => catDone('people') },
     { id: 'c-kpop', e: '🎤', t: 'Idol Hunter', h: 'Finish a K-Pop picture', ok: () => catDone('kpop') },
     { id: 'c-blocky', e: '⛏️', t: 'Block Builder', h: 'Finish a Blocky picture', ok: () => catDone('blocky') },
     { id: 'c-animals', e: '🐯', t: 'Animal Friend', h: 'Finish an Animal', ok: () => catDone('animals') },
