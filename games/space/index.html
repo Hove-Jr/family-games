@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="../../hub-sdk.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Nova Vanguard</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Nova Vanguard">
+<meta name="theme-color" content="#05030f">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud" class="hidden">
+  <button id="btnPause" class="hbtn">II</button>
+  <div class="hcol"><div id="hHearts"></div><div id="hShield"></div></div>
+  <div class="hcol right"><div id="hScore">0</div><div id="hRes"></div></div>
+</div>
+<button id="btnBomb" class="hidden"><span>BOMB</span><b id="bombN">1</b></button>
+<div id="ui"></div>
+<script src="game.js"></script>
+</body>
+</html>
