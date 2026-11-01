@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="../../hub-sdk.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Steel Bolt Rush</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Steel Bolt">
+<meta name="theme-color" content="#2b8cff">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="hud" class="hidden">
+  <div class="pill" id="scorePill">⭐ <span id="score">0</span></div>
+  <div class="pill" id="coinPill">🪙 <span id="coins">0</span></div>
+  <div class="pill" id="hearts">❤️❤️❤️</div>
+  <div id="powerBar"></div>
+  <button class="round" id="pauseBtn" aria-label="Pause">⏸</button>
+</div>
+
+<button class="round" id="muteBtn" aria-label="Sound">🔊</button>
+
+<div id="controls" class="hidden">
+  <button class="ctl" id="btnLeft" aria-label="Left">⬅️</button>
+  <div class="mid">
+    <button class="ctl small" id="btnUp" aria-label="Jump">⬆️</button>
+    <button class="ctl small" id="btnDown" aria-label="Duck">⬇️</button>
+  </div>
+  <button class="ctl" id="btnRight" aria-label="Right">➡️</button>
+</div>
+
+<div id="title" class="screen">
+  <h1>Steel Bolt <span>Rush</span></h1>
+  <canvas id="titleTruck" width="360" height="220"></canvas>
+  <div class="row">
+    <button class="big go" id="playBtn">▶ GO!</button>
+  </div>
+  <div class="row">
+    <button class="big garage" id="garageBtn">🎨 Garage</button>
+  </div>
+  <div class="best">🏆 <span id="bestTitle">0</span> &nbsp; 🪙 <span id="bankTitle">0</span></div>
+  <button class="round hidden" id="hubExit" aria-label="All games">🏠</button>
+</div>
+
+<div id="garage" class="screen hidden">
+  <h2>🎨 Pick your truck!</h2>
+  <canvas id="garageTruck" width="360" height="220"></canvas>
+  <div id="swatches"></div>
+  <div class="best">🪙 <span id="bankGarage">0</span></div>
+  <button class="big go" id="garageDone">✔ Done</button>
+</div>
+
+<div id="paused" class="screen hidden">
+  <h2>Paused</h2>
+  <button class="big go" id="resumeBtn">▶ Keep going</button>
+  <button class="big garage" id="homeBtn">🏠 Home</button>
+</div>
+
+<div id="over" class="screen hidden">
+  <h2 id="overMsg">Great driving, Archer!</h2>
+  <div class="stars">🌟🌟🌟</div>
+  <div class="result">⭐ <span id="finalScore">0</span></div>
+  <div class="result">🪙 <span id="finalCoins">0</span></div>
+  <div class="result" id="newBest">🏆 New best!</div>
+  <div id="unlockMsg"></div>
+  <button class="big go" id="againBtn">↻ Go again!</button>
+  <button class="big garage" id="overHome">🏠 Home</button>
+</div>
+
+<script src="game.js"></script>
+<script>
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>

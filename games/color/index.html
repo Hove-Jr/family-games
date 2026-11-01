@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="../../hub-sdk.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Pixel Pop! Color by Number</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pixel Pop">
+<meta name="theme-color" content="#7b2ff7">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div id="app">
+  <!-- PROFILE PICKER (v2 home) -->
+  <section id="s-who" class="screen who-screen">
+    <header class="topbar">
+      <div class="logo"><span class="lp">P</span><span class="li">i</span><span class="lx">x</span><span class="le">e</span><span class="ll">l</span> <span class="pop">Pop!</span></div>
+      <div class="spacer"></div>
+      <button class="iconbtn" data-act="sound" aria-label="Sound"><span class="snd-on">🔊</span><span class="snd-off">🔇</span></button>
+      <button class="iconbtn" data-act="parent" aria-label="Grown-ups">⚙️</button>
+    </header>
+    <div class="scroll">
+      <h2 class="who-title">Who's coloring today? 🎨</h2>
+      <div id="who-list" class="who-list"></div>
+      <p class="who-foot"><button class="bigbtn small ghost" data-act="parent">👨‍👩‍👦 Grown-ups: add or edit players</button></p>
+    </div>
+  </section>
+  <!-- LIBRARY -->
+  <section id="s-home" class="screen active">
+    <header class="topbar">
+      <div class="logo"><span class="lp">P</span><span class="li">i</span><span class="lx">x</span><span class="le">e</span><span class="ll">l</span> <span class="pop">Pop!</span></div>
+      <div class="spacer"></div>
+      <button class="iconbtn" data-act="sound" aria-label="Sound"><span class="snd-on">🔊</span><span class="snd-off">🔇</span></button>
+      <button class="iconbtn" data-act="parent" aria-label="Grown-ups">⚙️</button>
+    </header>
+    <div class="scroll">
+      <div id="lvl-home" class="lvlhost"></div>
+      <div id="daily" class="daily"></div>
+      <div id="chips" class="chips"></div>
+      <div id="lib" class="grid"></div>
+    </div>
+  </section>
+  <!-- MY WORK -->
+  <section id="s-work" class="screen">
+    <header class="topbar"><h1>🖼️ My Work</h1><div class="spacer"></div><button class="iconbtn" data-act="parent">⚙️</button></header>
+    <div class="seg" id="workseg"><button data-w="prog" class="on">🖌️ Coloring</button><button data-w="done">✅ Finished</button><button data-w="draw">🖍️ Drawings</button></div>
+    <div class="scroll"><div id="lvl-work" class="lvlhost"></div><div id="work" class="grid"></div></div>
+  </section>
+  <!-- PHOTO -->
+  <section id="s-photo" class="screen">
+    <header class="topbar"><h1>📸 Photo Puzzle</h1></header>
+    <div class="scroll photo-wrap">
+      <div id="ph-start" class="ph-start">
+        <p class="big-hint">Turn any picture into your own color-by-number!</p>
+        <label class="bigbtn grape"><input id="ph-file" type="file" accept="image/*" hidden>📷 Pick a Photo</label>
+      </div>
+      <div id="ph-edit" class="ph-edit hidden">
+        <div class="ph-col">
+          <div class="ph-label">1. Move &amp; zoom to pick the part you want</div>
+          <canvas id="ph-crop" class="ph-crop"></canvas>
+          <input id="ph-zoom" type="range" min="1" max="4" step="0.01" value="1" aria-label="Zoom">
+          <label class="bigbtn small ghost"><input id="ph-file2" type="file" accept="image/*" hidden>🔄 Different photo</label>
+        </div>
+        <div class="ph-col">
+          <div class="ph-label">2. How hard?</div>
+          <div class="seg" id="ph-size"><button data-n="20">😊 Easy</button><button data-n="32" class="on">🙂 Medium</button><button data-n="48">😎 Hard</button></div>
+          <div class="ph-label">3. How many colors? <b id="ph-kv">10</b></div>
+          <input id="ph-k" type="range" min="6" max="16" step="1" value="10" aria-label="Colors">
+          <label class="check"><input id="ph-vivid" type="checkbox" checked> ✨ Extra-bright colors</label>
+          <div class="ph-label">Preview</div>
+          <canvas id="ph-prev" class="ph-prev"></canvas>
+          <div id="ph-pal" class="ph-pal"></div>
+          <input id="ph-name" class="textin" maxlength="24" placeholder="Name your picture">
+          <button id="ph-make" class="bigbtn mint">🎨 Make My Puzzle!</button>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- FREE DRAW -->
+  <section id="s-draw" class="screen">
+    <header class="topbar"><h1>🖍️ Free Draw</h1><div class="spacer"></div>
+      <button class="iconbtn" data-act="draw-new" aria-label="New">🆕</button>
+      <button class="iconbtn" data-act="draw-save" aria-label="Save">💾</button></header>
+    <div class="draw-wrap">
+      <div class="draw-board"><canvas id="dr-canvas"></canvas></div>
+      <div class="draw-side">
+        <div id="dr-tools" class="toolrow">
+          <button data-dt="pen" class="tool on">✏️<small>Draw</small></button>
+          <button data-dt="fill" class="tool">🪣<small>Fill</small></button>
+          <button data-dt="erase" class="tool">🧽<small>Erase</small></button>
+          <button data-dt="undo" class="tool">↩️<small>Undo</small></button>
+        </div>
+        <div id="dr-pal" class="dr-pal"></div>
+        <button id="dr-puzzle" class="bigbtn small grape">🔢 Make it a puzzle</button>
+        <button id="dr-share" class="bigbtn small ghost">📤 Save to Photos</button>
+      </div>
+    </div>
+  </section>
+  <!-- STICKERS -->
+  <section id="s-stickers" class="screen">
+    <header class="topbar"><h1>🏅 Sticker Book</h1></header>
+    <div class="scroll"><p id="st-count" class="big-hint"></p><div id="stickers" class="stickers"></div></div>
+  </section>
+  <!-- PARENT -->
+  <section id="s-parent" class="screen">
+    <header class="topbar"><button class="iconbtn" data-act="pback" aria-label="Back">⬅️</button><h1>Grown-up Settings</h1></header>
+    <div class="scroll parent">
+      <div class="card">
+        <label class="row"><span>🔊 Sounds</span><input type="checkbox" id="set-sound"></label>
+        <label class="row"><span>🙂 Gentle mistakes (wrong colors show lightly and can be fixed)</span><input type="checkbox" id="set-gentle"></label>
+        <label class="row"><span>🪄 Helper tools (Bucket &amp; Magic Fill)</span><input type="checkbox" id="set-helpers"></label>
+        <label class="row"><span>🔢 Show numbers on every square, even zoomed out</span><input type="checkbox" id="set-nums"></label>
+      </div>
+      <div class="card"><h3>👧👦 Players</h3><div id="prof-list"></div><button class="bigbtn small mint" id="prof-add">➕ Add a player</button></div>
+      <div class="card"><h3>🔒 Parent lock</h3>
+        <div class="row"><span id="pin-status"></span><button class="bigbtn small grape" id="pin-set">Set PIN</button></div>
+        <label class="row"><span>🔐 Lock settings: the PIN is needed for settings, players, deletes and resets</span><input type="checkbox" id="set-lock"></label>
+        <div class="row"><span>Forgot the PIN? Answer a grown-up question to reset just the PIN (nothing else is erased).</span><button class="bigbtn small ghost" id="pin-reset">Reset PIN</button></div>
+        <p class="note">This is a kid lock, not real security. The PIN is saved only on this device, as a scrambled (hashed) code. Until a PIN is set, a grown-up math question guards settings.</p>
+      </div>
+      <div class="card"><h3>📸 <span class="pname"></span>'s pictures</h3><div id="pm-list"></div></div>
+      <div class="card"><h3>🖍️ <span class="pname"></span>'s drawings</h3><div id="pd-list"></div></div>
+      <div class="card danger">
+        <button class="bigbtn small ghost" id="reset-prog">Reset <span class="pname"></span>'s coloring progress &amp; level</button>
+        <button class="bigbtn small ghost" id="reset-stick">Reset <span class="pname"></span>'s sticker book</button>
+      </div>
+      <div class="card about"><b id="app-version">Pixel Pop! v2</b><br>No ads, no accounts, no tracking and nothing to buy. Everything stays on this iPad and works offline. <span id="storage-info"></span></div>
+    </div>
+  </section>
+  <!-- PLAY -->
+  <section id="s-play" class="screen play">
+    <header class="playbar">
+      <button class="iconbtn" data-act="back" aria-label="Back">⬅️</button>
+      <div class="ptitle"><div id="p-name"></div><div class="pbar"><div id="p-fill"></div><span id="p-pct">0%</span></div></div>
+      <button class="iconbtn" data-act="sound" aria-label="Sound"><span class="snd-on">🔊</span><span class="snd-off">🔇</span></button>
+    </header>
+    <div class="playmain">
+      <div class="board" id="board"><canvas id="cv"></canvas></div>
+      <div class="palette" id="palette"></div>
+    </div>
+    <div class="toolbar" id="tools">
+      <button data-t="brush" class="tool on">🖌️<small>Paint</small></button>
+      <button data-t="bucket" class="tool helper">🪣<small>Bucket</small></button>
+      <button data-t="wand" class="tool helper">🪄<small>Magic</small></button>
+      <button data-t="hint" class="tool">💡<small>Hint</small></button>
+      <button data-t="undo" class="tool">↩️<small>Undo</small></button>
+      <button data-t="move" class="tool">✋<small>Move</small></button>
+      <button data-t="fit" class="tool">🔍<small>Fit</small></button>
+    </div>
+  </section>
+  <nav class="bottomnav" id="nav">
+    <button data-nav="home" class="on"><span>🎨</span>Pictures</button>
+    <button data-nav="work"><span>🖼️</span>My Work</button>
+    <button data-nav="photo"><span>📸</span>Photo</button>
+    <button data-nav="draw"><span>🖍️</span>Draw</button>
+    <button data-nav="stickers"><span>🏅</span>Stickers</button>
+  </nav>
+</div>
+<!-- Modals -->
+<div id="modal" class="modal hidden"><div class="mbox" id="mbox"></div></div>
+<div id="toast" class="toast"></div>
+<canvas id="confetti"></canvas>
+<script src="js/pixart.js"></script>
+<script src="js/pics-kpop.js"></script>
+<script src="js/pics-blocky.js"></script>
+<script src="js/pics-animals.js"></script>
+<script src="js/pics-more.js"></script>
+<script src="js/pics-cars.js"></script>
+<script src="js/pics-monsters.js"></script>
+<script src="js/pics-sports.js"></script>
+<script src="js/pics-animals2.js"></script>
+<script src="js/pics-dinos.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Game Hub</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Game Hub">
+<meta name="theme-color" content="#5b2bd6">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="stylesheet" href="hub.css">
+</head>
+<body>
+<!-- 1. WHO'S PLAYING -->
+<section id="s-who" class="screen on">
+  <h1 class="title">Who's playing? <span class="wave">👋</span></h1>
+  <div id="who" class="tiles"></div>
+  <div class="foot">
+    <button id="editBtn" class="pill hold" data-hold="edit"><span class="ring"></span><span class="lbl">⚙️ Grown-ups</span></button>
+    <button id="doneBtn" class="pill hidden">✅ Done</button>
+  </div>
+  <p id="holdHint" class="hint hidden">Keep holding…</p>
+</section>
+
+<!-- 2. GAME PICKER -->
+<section id="s-games" class="screen">
+  <header class="bar">
+    <button id="meBtn" class="me" aria-label="Switch player"><span class="av"></span><span class="nm"></span><small>🔄</small></button>
+    <h1 class="title small">Pick a game!</h1>
+  </header>
+  <div id="games" class="tiles games"></div>
+</section>
+
+<!-- 3. PLAY -->
+<section id="s-play" class="screen play">
+  <iframe id="frame" title="Game" allow="autoplay; fullscreen"></iframe>
+  <button id="homeBtn" class="home" aria-label="Back to games">🏠</button>
+</section>
+
+<!-- profile editor -->
+<div id="modal" class="modal hidden">
+  <div class="card">
+    <h2 id="mTitle">New player</h2>
+    <div class="prev"><span id="mPrev" class="bigav">🐯</span></div>
+    <label class="fld">Name<input id="mName" maxlength="14" autocomplete="off" autocapitalize="words" placeholder="Name"></label>
+    <label class="fld">Age (helps pick game difficulty)<input id="mAge" type="number" inputmode="numeric" min="2" max="99" placeholder="optional"></label>
+    <div class="lbl2">Picture</div>
+    <div id="mAvs" class="avs"></div>
+    <div class="lbl2">Color</div>
+    <div id="mCols" class="cols"></div>
+    <div class="row">
+      <button id="mDel" class="pill danger hold" data-hold="del"><span class="ring"></span><span class="lbl">🗑️ Hold to delete</span></button>
+      <span class="sp"></span>
+      <button id="mCancel" class="pill ghost">Cancel</button>
+      <button id="mSave" class="pill go">Save</button>
+    </div>
+  </div>
+</div>
+<div id="toast" class="toast hidden"></div>
+<script src="games.js"></script>
+<script src="hub.js"></script>
+</body>
+</html>
