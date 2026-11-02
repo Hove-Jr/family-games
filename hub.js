@@ -18,6 +18,16 @@
     ];
     LS.set(K.profiles, profiles);
   }
+  // one-time migration: add Mom next to Dad on devices that already have profiles (never re-adds her after a deliberate delete)
+  if (!LS.get('hub.seed.mom', false)) {
+    if (!profiles.some(function (p) { return p.id === 'mom'; })) {
+      var mom = { id: 'mom', name: 'Mom', avatar: '🌈', color: '#ff4fa3', age: null }, di = -1;
+      profiles.forEach(function (p, i) { if (p.id === 'dad') di = i; });
+      if (di >= 0) profiles.splice(di + 1, 0, mom); else profiles.push(mom);
+      LS.set(K.profiles, profiles);
+    }
+    LS.set('hub.seed.mom', true);
+  }
   var settings = Object.assign({ parentLock: true }, LS.get(K.settings, {}));
   var games = window.HUB_GAMES || [];
   var me = null, editing = false;

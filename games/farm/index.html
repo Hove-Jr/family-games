@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="../../hub-sdk.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#4e8a3c">
+<title>Sunpatch Valley</title>
+<link rel="icon" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="map"></canvas>
+<div id="hud">
+  <div id="hudL">
+    <div class="lvl"><span id="lvl">1</span></div>
+    <div class="xp"><div id="xpbar"><i></i></div><span id="xptxt">0/0</span></div>
+  </div>
+  <div id="hudR">
+    <div class="chip" data-icon="coin"><span id="coins">0</span></div>
+    <div class="chip" data-icon="gem"><span id="gems">0</span></div>
+    <div class="chip" data-icon="person" data-go="shop"><span id="pop">0</span></div>
+    <div class="chip" data-icon="barnico" data-go="barn"><span id="barnc">0</span></div>
+  </div>
+</div>
+<div id="side">
+  <button id="bDaily" class="rb" data-icon="gift" data-go="daily" aria-label="Daily gift"></button>
+  <button id="bHelp" class="rb" data-icon="help" data-go="help" aria-label="How to play"></button>
+</div>
+<div id="dock">
+  <button id="bOrders" class="db" data-icon="clip" data-go="board"><span>Orders</span></button>
+  <button id="bTruck" class="db" data-icon="truck" data-go="depot"><span>Truck</span></button>
+  <button id="bBarn" class="db" data-icon="barnico" data-go="barn"><span>Barn</span></button>
+  <button id="bBuild" class="db big" data-icon="hammer" data-go="shop"><span>Build</span></button>
+</div>
+<div id="tray" class="hidden"></div>
+<div id="placebar" class="hidden"><span class="pname">Field</span><button id="pNo" class="btn ghost">Cancel</button><button id="pOk" class="btn">Place</button><div class="tiny">Drag the building to move it</div></div>
+<div id="toast"></div>
+<div id="shade"></div>
+<div id="sheet" role="dialog"><div class="sh"><b id="sheetTitle"></b><button id="sheetX" aria-label="Close">✕</button></div><div id="sheetBody"></div></div>
+<script src="data.js"></script>
+<script src="art.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
