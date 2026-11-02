@@ -263,7 +263,9 @@ function probeInsets(doc) {
 function readInsets() {
   if (insOverride) return insOverride;
   const r = probeInsets(document);
-  try { if (window.parent !== window && window.parent.document && window.parent.document.body) { const q = probeInsets(window.parent.document); for (const k in r) r[k] = Math.max(r[k], q[k]); } } catch (e) {}
+  try { if (window.parent !== window && window.parent.document && window.parent.document.body) { const q = probeInsets(window.parent.document); for (const k in r) r[k] = Math.max(r[k], q[k]);
+    // iOS home-screen app: the hub reports the dead strip at the bottom (--gap); keep controls above it
+    const g = parseFloat(window.parent.getComputedStyle(window.parent.document.documentElement).getPropertyValue('--gap')) || 0; r.b = Math.max(r.b, g); } } catch (e) {}
   return r;
 }
 function resize() {

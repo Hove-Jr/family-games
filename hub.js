@@ -133,10 +133,27 @@
   function play(g) {
     current = g;
     var hb = $('#homeBtn'); hb.className = 'home ' + (g.corner || 'tl');
+    var ps = $('#s-play') || frame.parentNode;
+    ps.classList.toggle('inset', !g.edge); ps.style.background = '#000';
+    frame.onload = function () { tint(); };
     frame.src = 'games/' + g.id + '/index.html?profile=' + encodeURIComponent(me.id) + '&hub=1';
     show('play');
     try { location.hash = 'play'; } catch (e) {}
   }
+  // iOS home-screen apps have a strip below the game frame (see index.html); paint it to match the bottom of the game
+  function tint() {
+    if (!current || current.edge) return;
+    var ps = $('#s-play');
+    try {
+      var d = frame.contentDocument, c = null, best = 0;
+      [].forEach.call(d.querySelectorAll('canvas'), function (k) { var a = k.width * k.height; if (a > best && k.getBoundingClientRect().bottom >= frame.clientHeight - 4) { best = a; c = k; } });
+      var x = c && c.getContext && c.getContext('2d');
+      if (x) { var p = x.getImageData(c.width >> 1, c.height - 2, 1, 1).data; if (p[3] > 200) { ps.style.background = 'rgb(' + p[0] + ',' + p[1] + ',' + p[2] + ')'; return; } }
+      var pick = function (el) { var v = el && getComputedStyle(el).backgroundColor; return v && v !== 'transparent' && !/,\s*0\)$/.test(v) ? v : null; };
+      var v = pick(d.body) || pick(d.documentElement); if (v) ps.style.background = v;
+    } catch (e) {}
+  }
+  setInterval(function () { if (current && $('#s-play').classList.contains('on') && getComputedStyle(document.documentElement).getPropertyValue('--gap').trim() !== '0px') tint(); }, 1500);
   function leave() {
     if (!current) return;
     try { var w = frame.contentWindow; w.dispatchEvent(new Event('pagehide')); w.dispatchEvent(new Event('beforeunload')); } catch (e) {}

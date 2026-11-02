@@ -2,6 +2,7 @@
 html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none;-webkit-user-select:none;user-select:none;
   font-family:"Arial Rounded MT Bold","Chalkboard SE","Nunito",system-ui,-apple-system,sans-serif;color:#fff;
   background:linear-gradient(160deg,#5b2bd6 0%,#2f6df6 55%,#14b8c9 100%)}
+html{background:#1a0f4a;--gap:0px} /* never let iOS show white behind/below the page */
 button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulation}
 .hidden{display:none!important}
 .screen{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;overflow-y:auto;-webkit-overflow-scrolling:touch;
@@ -51,12 +52,18 @@ body.editing .ptile[data-pid]{animation:jig .35s infinite alternate}
 /* play */
 .screen.play{padding:0;background:#000;overflow:hidden}
 #frame{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
+/* games that are not edge-to-edge aware stay above the dead strip; the strip is painted with the game's own background */
+.screen.play.inset #frame{height:calc(100% - var(--gap))}
+/* iOS standalone: fill the physical screen (see index.html) */
+html.standalone,html.standalone body{height:100vh}
+html.standalone .screen{bottom:auto;height:100vh;padding-bottom:calc(max(env(safe-area-inset-bottom),var(--gap)) + 3vh)}
+html.standalone .screen.play{padding:0}
 .home{position:absolute;z-index:5;width:56px;height:56px;border-radius:50%;font-size:28px;background:rgba(255,255,255,.75);box-shadow:0 3px 10px rgba(0,0,0,.35);opacity:.8}
 .home:active{transform:scale(.9)}
 .home.tl{top:calc(env(safe-area-inset-top) + 10px);left:calc(env(safe-area-inset-left) + 10px)}
 .home.tr{top:calc(env(safe-area-inset-top) + 10px);right:calc(env(safe-area-inset-right) + 10px)}
-.home.bl{bottom:calc(env(safe-area-inset-bottom) + 10px);left:calc(env(safe-area-inset-left) + 10px)}
-.home.br{bottom:calc(env(safe-area-inset-bottom) + 10px);right:calc(env(safe-area-inset-right) + 10px)}
+.home.bl{bottom:calc(max(env(safe-area-inset-bottom),var(--gap)) + 10px);left:calc(env(safe-area-inset-left) + 10px)}
+.home.br{bottom:calc(max(env(safe-area-inset-bottom),var(--gap)) + 10px);right:calc(env(safe-area-inset-right) + 10px)}
 /* modal */
 .modal{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;background:rgba(10,10,40,.55);padding:20px}
 .card{width:min(640px,100%);max-height:100%;overflow-y:auto;background:#fff;color:#222;border-radius:32px;padding:26px 28px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
