@@ -60,3 +60,13 @@ h3{margin:14px 0 8px;font-size:18px;color:#9fe9ff;letter-spacing:1px}
 .note{font-size:13px;color:#8aa;text-align:center;margin-top:8px}
 .top{position:sticky;top:-22px;background:#0b1034;z-index:2;padding:6px 0 4px;margin:-6px 0 6px}
 .toast{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);font-size:34px;font-weight:900;color:#fff;text-shadow:0 0 16px #57e9ff;pointer-events:none;text-align:center;z-index:7}
+/* expansion */
+.core{color:#5dffc8}
+.newtag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.5px;color:#06121f;background:#ffe14a;border-radius:6px;padding:1px 5px;vertical-align:middle;text-shadow:none;margin-left:4px}
+.pips{flex-wrap:wrap}
+.pips.dense{gap:2px}
+.pips.dense i{width:9px;height:7px}
+.pips i.ext{background:#2a1c4d}
+.pips i.ext.on{background:#c58bff;box-shadow:0 0 6px #c58bff}
+body.inhub #hud{padding-right:84px}
+@media (min-width:960px){body.inhub #hud{padding-right:14px}}
