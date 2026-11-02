@@ -250,15 +250,44 @@ let VW = 600, VH = 960, S = 1, DPR = 1;
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
 const rnd = (a, b) => a + Math.random() * (b - a);
 const TAU = Math.PI * 2;
-function resize() {
-  const cw = window.innerWidth, ch = window.innerHeight;
-  VH = 960; VW = Math.max(540, Math.min(760, Math.round(960 * cw / ch)));
-  S = Math.min(cw / VW, ch / VH); DPR = Math.min(2, window.devicePixelRatio || 1);
-  cv.width = Math.round(VW * S * DPR); cv.height = Math.round(VH * S * DPR);
-  cv.style.width = (VW * S) + 'px'; cv.style.height = (VH * S) + 'px';
-  makeStars();
-  if (player) player.x = clamp(player.x, 20, VW - 20);
+// Safe-area insets. Inside the hub we run in an iframe, where iOS reports env(safe-area-inset-*) as 0,
+// so we also probe the (same-origin) parent page and take the larger value.
+let INS = { t: 0, r: 0, b: 0, l: 0 }, insOverride = null, HUDB = 0, OFFY = 0, BAND = 0;
+function probeInsets(doc) {
+  const d = doc.createElement('div');
+  d.style.cssText = 'position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)';
+  doc.body.appendChild(d); const cs = doc.defaultView.getComputedStyle(d);
+  const r = { t: parseFloat(cs.paddingTop) || 0, r: parseFloat(cs.paddingRight) || 0, b: parseFloat(cs.paddingBottom) || 0, l: parseFloat(cs.paddingLeft) || 0 };
+  d.remove(); return r;
 }
+function readInsets() {
+  if (insOverride) return insOverride;
+  const r = probeInsets(document);
+  try { if (window.parent !== window && window.parent.document && window.parent.document.body) { const q = probeInsets(window.parent.document); for (const k in r) r[k] = Math.max(r[k], q[k]); } } catch (e) {}
+  return r;
+}
+function resize() {
+  INS = readInsets();
+  const rs = document.documentElement.style;
+  rs.setProperty('--sat', INS.t + 'px'); rs.setProperty('--sar', INS.r + 'px'); rs.setProperty('--sab', INS.b + 'px'); rs.setProperty('--sal', INS.l + 'px');
+  const cw = window.innerWidth, ch = window.innerHeight, ah = Math.max(200, ch - INS.t); // play area sits below the status bar / notch
+  const asp = cw / ah;
+  if (asp >= 540 / 960) { VH = 960; VW = Math.min(760, Math.round(960 * asp)); }
+  else { VW = 540; VH = Math.min(1280, Math.round(540 / asp)); } // tall phones: grow the playfield instead of letterboxing
+  S = Math.min(cw / VW, ah / VH); DPR = Math.min(2, window.devicePixelRatio || 1);
+  // the canvas also covers the status-bar strip (background only), so the game is truly edge-to-edge
+  const top = (ah - VH * S) / 2; BAND = INS.t;
+  cv.width = Math.round(VW * S * DPR); cv.height = Math.round((VH * S + BAND) * DPR);
+  cv.style.width = (VW * S) + 'px'; cv.style.height = (VH * S + BAND) + 'px';
+  OFFY = top + BAND;
+  cv.style.left = ((cw - VW * S) / 2) + 'px'; cv.style.top = top + 'px';
+  document.body.classList.toggle('phone-land', cw > ch && ch < 560);
+  document.body.classList.toggle('narrow', cw < 560);
+  makeStars(); nebSector = -1;
+  if (player) { player.x = clamp(player.x, 20, VW - 20); player.y = clamp(player.y, 120, VH - 40); }
+  hudCache = ''; measureHud();
+}
+function measureHud() { try { const r = hud.getBoundingClientRect(); HUDB = r.height ? (r.bottom - OFFY) / S : 0; } catch (e) { HUDB = 0; } }
 
 // ---------------------------------------------------------------- sprites (pre-rendered glow)
 function mk(w, h, fn, sc = 2) { const c = document.createElement('canvas'); c.width = Math.ceil(w * sc); c.height = Math.ceil(h * sc); const g = c.getContext('2d'); g.scale(sc, sc); fn(g, w, h); c.w = w; c.h = h; return c; }
@@ -405,6 +434,7 @@ function drawBg(dt, si) {
   nebY = (nebY + dt * 12) % VH;
   ctx.drawImage(nebula, 0, nebY - VH, VW, VH);
   ctx.drawImage(nebula, 0, nebY, VW, VH);
+  if (BAND && nebY < BAND / S + 2) ctx.drawImage(nebula, 0, nebY - 2 * VH, VW, VH);
   ctx.fillStyle = '#fff';
   for (const s of stars) {
     s.y += s.v * dt * (warp ? 6 : 1); if (s.y > VH) { s.y -= VH; s.x = Math.random() * VW; }
@@ -1069,7 +1099,7 @@ function pickSprite(k) {
   return pickSpCache[k] = mk(44, 44, g => { g.translate(22, 22); g.shadowColor = c; g.shadowBlur = 14; g.strokeStyle = c; g.lineWidth = 3; g.fillStyle = c + '44'; g.beginPath(); for (let i = 0; i < 6; i++) { const a = i * TAU / 6; g.lineTo(Math.cos(a) * 16, Math.sin(a) * 16); } g.closePath(); g.fill(); g.stroke(); g.shadowBlur = 4; g.fillStyle = '#fff'; g.font = 'bold 18px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(t, 0, 1); });
 }
 function render(dt) {
-  ctx.setTransform(S * DPR, 0, 0, S * DPR, 0, 0);
+  ctx.setTransform(S * DPR, 0, 0, S * DPR, 0, BAND * DPR);
   if (shake > 0) ctx.translate(rnd(-shake, shake) * 0.5, rnd(-shake, shake) * 0.5);
   drawBg(dt, G ? G.sector : menuSector);
   if (!G || state === 'menu') { drawMenuShip(dt); return; }
@@ -1134,7 +1164,7 @@ function render(dt) {
   for (const f of floaters) { ctx.globalAlpha = Math.min(1, f.life * 2); ctx.fillStyle = f.color; ctx.fillText(f.text, f.x, f.y); }
   ctx.globalAlpha = 1;
   if (boss && !boss.dying) {
-    const w = VW - 120, x = 60, y = 100, k = Math.max(0, boss.hp / boss.maxHp);
+    const w = VW - 120, x = 60, y = Math.max(100, HUDB + 26), k = Math.max(0, boss.hp / boss.maxHp);
     ctx.fillStyle = '#000a'; ctx.fillRect(x, y, w, 12); ctx.fillStyle = boss.def.color; ctx.fillRect(x, y, w * k, 12);
     ctx.strokeStyle = '#ffffff55'; ctx.lineWidth = 1; ctx.strokeRect(x, y, w, 12);
     ctx.fillStyle = '#fff'; ctx.font = 'bold 14px -apple-system,sans-serif'; ctx.fillText(boss.def.name + (boss.parts.some(t => t.hp > 0) ? ' — DESTROY THE TURRETS' : ''), VW / 2, y - 6);
@@ -1183,19 +1213,24 @@ function drawMenuShip(dt) {
 // ---------------------------------------------------------------- HUD
 const $ = id => document.getElementById(id);
 const hud = $('hud'), bombBtn = $('btnBomb');
-function showHud(on) { hud.classList.toggle('hidden', !on); bombBtn.classList.toggle('hidden', !on); }
+function showHud(on) { hud.classList.toggle('hidden', !on); bombBtn.classList.toggle('hidden', !on); hudCache = ''; if (!on) HUDB = 0; }
 let hudCache = '';
 function updateHud() {
   if (!G || state !== 'play') return;
   const p = player, mh = G.st.maxHp;
-  const hearts = G.diff === 'kid' ? '♥ ×' + p.hp : '♥'.repeat(Math.max(0, p.hp)) + '<span style="opacity:.25">' + '♥'.repeat(Math.max(0, mh - p.hp)) + '</span>';
+  const hp = Math.max(0, p.hp);
+  const hearts = G.diff === 'kid' ? '♥ ×' + hp
+    : mh <= 8 ? '♥'.repeat(hp) + '<span style="opacity:.25">' + '♥'.repeat(Math.max(0, mh - hp)) + '</span>'
+    : `<span class="hpn">♥ ${hp}<small>/${mh}</small></span><span class="hpbar"><i style="width:${Math.round(100 * Math.min(1, hp / mh))}%"></i></span>`;
   const bf = (p.buff.rap > 0 ? ' ⚡' : '') + (p.buff.vac > 0 ? ' 🧲' : '') + (p.buff.slo > 0 ? ' ⏳' : '') + (p.buff.inv > 0 ? ' ⭐' : '') + (p.revives ? ' 🔥' + p.revives : '');
   const s = `${hearts}|${p.shield}|${G.score}|${G.coins}|${G.crystals}|${G.cores}|${p.bombs}|${p.pow}|${bf}`;
   if (s === hudCache) return; hudCache = s;
   $('hHearts').innerHTML = hearts;
-  $('hShield').textContent = (p.shield ? '⬡'.repeat(p.shield) + '  ' : '') + 'PWR ' + p.pow + (G.endless ? '  WAVE ' + G.endlessWave : '  LV ' + G.L) + bf;
-  $('hScore').textContent = G.score.toLocaleString();
-  $('hRes').innerHTML = `<span class="coin">● ${G.coins.toLocaleString()}</span> &nbsp; <span class="cry">◆ ${G.crystals}</span>${G.cores || G.L > 15 ? ` &nbsp; <span class="core">◈ ${G.cores}</span>` : ''}`;
+  const sh = p.shield ? (p.shield <= 4 ? '⬡'.repeat(p.shield) : '⬡×' + p.shield) : '';
+  $('hShield').innerHTML = `${sh ? `<span>${sh}</span>` : ''}<span>PWR ${p.pow}</span><span>${G.endless ? 'WAVE ' + G.endlessWave : 'LV ' + G.L}</span>${bf ? `<span class="bf">${bf.trim()}</span>` : ''}`;
+  $('hScore').textContent = fmtC(G.score, 9999999);
+  $('hRes').innerHTML = `<span class="coin">● ${fmtC(G.coins, 99999)}</span><span class="cry">◆ ${fmtC(G.crystals, 9999)}</span>${G.cores || G.L > 15 ? `<span class="core">◈ ${fmtC(G.cores, 9999)}</span>` : ''}`;
+  measureHud();
   $('bombN').textContent = p.bombs; bombBtn.classList.toggle('empty', p.bombs <= 0);
 }
 
@@ -1230,9 +1265,9 @@ function finishRun(cleared) {
     <h2>${G.endless ? 'SURVIVAL OVER' : cleared ? 'LEVEL ' + L + ' CLEAR!' : 'SHIP DESTROYED'}</h2>
     ${starHtml}
     ${G.endless ? `<div class="sub">Reached wave ${G.endlessWave} · best ${save.endless[G.diff]}</div>` : cleared ? `<div class="sub">${G.hits === 0 ? 'Flawless! ' : ''}Hits taken: ${G.hits}${G.diff === 'kid' ? ' · Kid mode earns 1★' : ''}</div>` : `<div class="sub">You keep everything you collected. Upgrade in the Hangar and try again!</div>`}
-    <div class="res"><span>Score ${G.score.toLocaleString()}${newHigh ? ' 🏆' : ''}</span></div>
-    <div class="res"><span class="coin">● +${totC.toLocaleString()}</span><span class="cry">◆ +${totCr}</span>${totCo ? `<span class="core">◈ +${totCo}</span>` : ''}</div>
-    ${bonusC ? `<div class="note">Clear bonus ● ${bonusC.toLocaleString()}${firstClear ? ' (first clear ×2)' : ''}${bonusCr ? ` · ◆ ${bonusCr}${newStars ? ` (${newStars} new star${newStars > 1 ? 's' : ''})` : ''}` : ''}${bonusCo ? ` · ◈ ${bonusCo}` : ''}</div>` : ''}
+    <div class="res"><span>Score ${fmtC(G.score, 9999999)}${newHigh ? ' 🏆' : ''}</span></div>
+    <div class="res"><span class="coin">● +${fmtC(totC, 999999)}</span><span class="cry">◆ +${fmtC(totCr, 99999)}</span>${totCo ? `<span class="core">◈ +${fmtC(totCo, 99999)}</span>` : ''}</div>
+    ${bonusC ? `<div class="note">Clear bonus ● ${fmtC(bonusC, 999999)}${firstClear ? ' (first clear ×2)' : ''}${bonusCr ? ` · ◆ ${bonusCr}${newStars ? ` (${newStars} new star${newStars > 1 ? 's' : ''})` : ''}` : ''}${bonusCo ? ` · ◈ ${bonusCo}` : ''}</div>` : ''}
     ${cleared && firstClear && L % 5 === 0 && L < NLEV ? `<div class="note" style="color:${SECTORS[L / 5].hue};font-size:16px;font-weight:800">${SECTORS[L / 5].name} unlocked!</div>` : ''}
     ${cleared && firstClear && L === NLEV ? `<div class="note" style="color:#fff;font-size:16px;font-weight:800">THE SINGULARITY HAS FALLEN — you conquered every sector! Keep grinding: Hard mode, 3★ runs and Endless await.</div>` : ''}
     ${nextOk ? `<button class="btn" data-a="next">Next Level ▶</button>` : ''}
@@ -1247,9 +1282,17 @@ function ui(html, actions = {}) {
   uiEl.innerHTML = html;
   uiEl.querySelectorAll('[data-a]').forEach(el => el.addEventListener('click', ev => { ev.stopPropagation(); audioInit(); sfx('click'); const f = actions[el.dataset.a]; if (f) f(el); }));
 }
-const fmt = n => n >= 10000 ? (n / 1000).toFixed(n >= 100000 ? 0 : 1) + 'k' : n.toLocaleString();
+// compact numbers: 9,999 · 12.3K · 456K · 7.89M · 1.2B
+function fmtC(n, full = 9999) {
+  n = Math.floor(n || 0); const a = Math.abs(n);
+  if (a <= full) return n.toLocaleString();
+  const u = [[1e12, 'T'], [1e9, 'B'], [1e6, 'M'], [1e3, 'K']].find(x => a >= x[0]);
+  const v = n / u[0], d = Math.abs(v) >= 100 ? 0 : Math.abs(v) >= 10 ? 1 : 2, m = Math.pow(10, d);
+  return (Math.floor(v * m) / m).toString() + u[1]; // truncate (never show more than you have)
+}
+const fmt = n => fmtC(n);
 const showCores = () => save.cores > 0 || highestCleared() >= 15;
-const wallet = () => `<div class="res"><span class="coin">● ${save.coins.toLocaleString()}</span><span class="cry">◆ ${save.crystals.toLocaleString()}</span>${showCores() ? `<span class="core">◈ ${save.cores.toLocaleString()}</span>` : ''}</div>`;
+const wallet = () => `<div class="res wallet"><span class="coin" title="${save.coins.toLocaleString()} coins">● ${fmtC(save.coins, 999999)}</span><span class="cry" title="${save.crystals.toLocaleString()} crystals">◆ ${fmtC(save.crystals, 99999)}</span>${showCores() ? `<span class="core" title="${save.cores.toLocaleString()} cores">◈ ${fmtC(save.cores, 99999)}</span>` : ''}</div>`;
 const costHtml = c => `● ${fmt(c.coins)}${c.cr ? `<br><span class="cry">◆ ${c.cr}</span>` : ''}${c.cores ? ` <span class="core">◈ ${c.cores}</span>` : ''}`;
 const canPay = c => save.coins >= c.coins && save.crystals >= (c.cr || 0) && save.cores >= (c.cores || 0);
 function whatsNew() {
@@ -1270,7 +1313,7 @@ function menuScreen() {
   if (!save.seenExp && highestCleared() === 0 && !save.stats.runs) { save.seenExp = 1; persist(); }
   const inHub = window.HubSave && window.HubSave.inHub;
   ui(`<div class="panel clear">
-    <h1>NOVA<br>VANGUARD</h1>
+    <h1>NOVA <br>VANGUARD</h1>
     <div class="sub">Defend the frontier. Upgrade. Conquer the Void.</div>
     ${wallet()}
     <button class="btn" data-a="play">▶ PLAY</button>
@@ -1278,7 +1321,8 @@ function menuScreen() {
     <div class="seg">${Object.keys(DIFF).map(k => `<button data-a="diff" data-d="${k}" class="${save.diff === k ? 'on' : ''}">${DIFF[k].name}</button>`).join('')}</div>
     <div class="note">${save.diff === 'kid' ? 'Kid mode: slow bullets, tiny hitbox, endless lives — never game over.' : save.diff === 'hard' ? 'Hard: tougher foes, faster bullets, ×1.6 rewards.' : 'Normal: the intended challenge.'}</div>
     <div class="row" style="margin-top:10px"><button class="btn small" data-a="mute">${save.muted ? '🔇 Sound off' : '🔊 Sound on'}</button>${inHub ? '<button class="btn small" data-a="exit">⌂ All games</button>' : ''}</div>
-    <div class="note">High score (${DIFF[save.diff].name}): ${(save.high[save.diff] || 0).toLocaleString()} · Levels cleared: ${highestCleared()}/${NLEV}</div>
+    <div class="note">High score (${DIFF[save.diff].name}): ${fmtC(save.high[save.diff] || 0, 9999999)} · Levels cleared: ${highestCleared()}/${NLEV}</div>
+    <div class="note rotate-hint">📱 Turn your phone upright for the full-screen view</div>
     ${save.seenExp ? '' : '<div class="note" style="color:#ffe14a;font-weight:800;font-size:15px">⚡ NEW: Expansion — 45 new levels, new ships &amp; upgrades! Tap PLAY ⚡</div>'}
   </div>`, {
     play: () => save.seenExp ? mapScreen() : whatsNew(), hangar: () => hangarScreen(),
@@ -1294,7 +1338,7 @@ function mapScreen() {
   for (let s = 0; s < NSEC; s++) {
     const first = s * 5 + 1, secLocked = first > unlocked;
     let got = 0; for (let i = first; i < first + 5; i++) got += save.levels[i] ? save.levels[i].stars : 0;
-    html += `<div class="sector" style="color:${SECTORS[s].hue};text-shadow:0 0 8px ${SECTORS[s].hue};${secLocked ? 'opacity:.45' : ''}">${secLocked ? '🔒 ' : ''}${SECTORS[s].name}${s >= 3 ? ' <span class="newtag">NEW</span>' : ''}<span style="float:right;color:#ffd54a;text-shadow:none;font-size:14px">★ ${got}/15</span></div><div class="levels">`;
+    html += `<div class="sector" style="color:${SECTORS[s].hue};text-shadow:0 0 8px ${SECTORS[s].hue};${secLocked ? 'opacity:.45' : ''}"><span class="sn">${secLocked ? '🔒 ' : ''}${SECTORS[s].name}${s >= 3 ? ' <span class="newtag">NEW</span>' : ''}</span><span class="ss">★ ${got}/15</span></div><div class="levels">`;
     for (let i = first; i <= s * 5 + 5; i++) {
       const rec = save.levels[i], st = rec ? rec.stars : 0, lock = i > unlocked, bossL = i % 5 === 0;
       html += `<button class="lv ${bossL ? 'boss' : ''} ${lock ? 'locked' : ''} ${i === unlocked && !rec ? 'next' : ''}" data-a="lv" data-l="${i}" ${lock ? 'disabled' : ''}>${lock ? '🔒' : i}<small>${lock ? '' : '★'.repeat(st) + '<span style="opacity:.25">' + '★'.repeat(3 - st) + '</span>'}</small></button>`;
@@ -1383,6 +1427,8 @@ $('btnPause').addEventListener('click', e => { e.stopPropagation(); pauseGame();
 bombBtn.addEventListener('pointerdown', e => { e.stopPropagation(); useBomb(); });
 document.addEventListener('visibilitychange', () => { if (document.hidden) pauseGame(); });
 addEventListener('resize', resize);
+addEventListener('orientationchange', () => { setTimeout(resize, 120); setTimeout(resize, 500); });
+if (window.visualViewport) visualViewport.addEventListener('resize', () => { if (Math.abs(visualViewport.height - innerHeight) < 2) resize(); });
 
 // ---------------------------------------------------------------- loop
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 60;
@@ -1410,7 +1456,7 @@ window.NV = {
   god: () => { if (player) player.inv = 1e9; }, boss: () => { if (G) { enemies.length = 0; G.queue.length = 0; G.waveIdx = 99; G.phase = 'warn'; G.phaseT = 3; } },
   step: (sec, dt = 1 / 60) => { for (let t = 0; t < sec && state === 'play'; t += dt) update(dt); updateHud(); },
   costTable: () => TRACK_KEYS.map(k => [k, Array.from({ length: TRACKS[k].max }, (_, i) => upgCost(k, i + 1))]),
-  hazard: (k, o) => spawnHazard(k, o), info: () => ({ levels: NLEV, sectors: NSEC, bosses: Object.keys(BOSSDEF).length, ships: Object.keys(SHIPS).length, tracks: TRACK_KEYS.length, tiers: TRACK_KEYS.reduce((a, k) => a + TRACKS[k].max, 0), enemies: Object.keys(EDEF).length }),
+  hazard: (k, o) => spawnHazard(k, o), setInsets: o => { insOverride = o; resize(); }, fmtC, get HUDB() { return HUDB; }, info: () => ({ levels: NLEV, sectors: NSEC, bosses: Object.keys(BOSSDEF).length, ships: Object.keys(SHIPS).length, tracks: TRACK_KEYS.length, tiers: TRACK_KEYS.reduce((a, k) => a + TRACKS[k].max, 0), enemies: Object.keys(EDEF).length }),
   levels: LEVELS, migrate: migrateSave, buff: (k, t = 8) => { if (player) player.buff[k] = t; }, whatsNew,
   hazards: () => hazards, stats: () => G && G.st,
   reset: () => { save = defSave(); persist(); menuScreen(); },
