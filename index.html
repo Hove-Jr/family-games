@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Game Hub">
-<meta name="theme-color" content="#5b2bd6">
+<meta name="theme-color" content="#07091a">
 <meta name="format-detection" content="telephone=no">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -27,28 +27,40 @@ gap();addEventListener('resize',gap);addEventListener('orientationchange',functi
 <body>
 <!-- 1. WHO'S PLAYING -->
 <section id="s-who" class="screen on">
-  <h1 class="title">Who's playing? <span class="wave">👋</span></h1>
-  <div id="who" class="tiles"></div>
-  <div class="foot">
-    <button id="editBtn" class="pill hold" data-hold="edit"><span class="ring"></span><span class="lbl">⚙️ Grown-ups</span></button>
-    <button id="doneBtn" class="pill hidden">✅ Done</button>
+  <div class="wrap">
+    <header class="whohead">
+      <div class="brand"><i></i>Game Hub</div>
+      <h1 class="lt">Who&rsquo;s playing?</h1>
+      <p>Pick your player to load your saves.</p>
+    </header>
+    <div id="who" class="ptiles"></div>
+    <div class="foot">
+      <button id="addBtn" class="pill subtle"><span class="lbl"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Add player</span></button>
+      <button id="editBtn" class="pill subtle hold" data-hold="edit"><span class="ring"></span><span class="lbl"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Grown-ups</span></button>
+      <button id="doneBtn" class="pill go hidden">Done</button>
+    </div>
   </div>
-  <p id="holdHint" class="hint hidden">Keep holding…</p>
+  <p id="holdHint" class="hint hidden">Keep holding&hellip;</p>
 </section>
 
 <!-- 2. GAME PICKER -->
 <section id="s-games" class="screen">
-  <header class="bar">
-    <button id="meBtn" class="me" aria-label="Switch player"><span class="av"></span><span class="nm"></span><small>🔄</small></button>
-    <h1 class="title small">Pick a game!</h1>
-  </header>
-  <div id="games" class="tiles games"></div>
+  <div class="wrap">
+    <header class="top">
+      <button id="meBtn" class="me press" aria-label="Switch player"><span class="av"></span><span class="nm"></span>
+        <span class="sw"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3L3 7l4 4"/><path d="M3 7h14"/><path d="M17 13l4 4-4 4"/><path d="M21 17H7"/></svg>Switch</span></button>
+    </header>
+    <div class="lthead"><div id="greet" class="eyebrow"></div><h1 class="lt">Games</h1></div>
+    <div id="hero"></div>
+    <h2 class="sec">All games <small id="gcount"></small></h2>
+    <div id="games" class="grid"></div>
+  </div>
 </section>
 
 <!-- 3. PLAY -->
 <section id="s-play" class="screen play">
   <iframe id="frame" title="Game" allow="autoplay; fullscreen"></iframe>
-  <button id="homeBtn" class="home" aria-label="Back to games">🏠</button>
+  <button id="homeBtn" class="home" aria-label="Back to games"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></button>
 </section>
 
 <!-- profile editor -->

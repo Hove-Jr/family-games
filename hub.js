@@ -36,15 +36,36 @@
   function toast(t) { var el = $('#toast'); el.textContent = t; el.classList.remove('hidden'); clearTimeout(toast.t); toast.t = setTimeout(function () { el.classList.add('hidden'); }, 1800); }
   function show(id) { ['who', 'games', 'play'].forEach(function (s) { $('#s-' + s).classList.toggle('on', s === id); }); }
   function saveProfiles() { LS.set(K.profiles, profiles); }
+  var SVG = {
+    pencil: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
+    plus: '<svg width="40%" height="40%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+    play: '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12.5-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5z"/></svg>'
+  };
+  // per-profile play history (hub-level key, separate from game saves): { gameId: { t: lastPlayedMs, n: plays } }
+  function hist(pid) { return LS.get('hub.recent.' + pid, {}) || {}; }
+  function lastPlayed(pid) { var h = hist(pid), best = null; Object.keys(h).forEach(function (id) { if (gameById(id) && (!best || h[id].t > best.t)) best = { id: id, t: h[id].t }; }); return best; }
+  function gameById(id) { return games.filter(function (x) { return x.id === id; })[0]; }
+  function ago(t) {
+    var s = Math.max(0, (Date.now() - t) / 1000);
+    if (s < 60) return 'just now'; if (s < 3600) return Math.floor(s / 60) + 'm ago'; if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+    var d = Math.floor(s / 86400); return d === 1 ? 'yesterday' : d < 7 ? d + 'd ago' : new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  }
+  function iconHtml(g) {
+    var inner = g.status === 'ready' && g.icon ? '<img alt="" src="games/' + esc(g.id) + '/' + esc(g.icon) + '" loading="lazy" decoding="async">' : '<span class="em">' + esc(g.emoji) + '</span>';
+    return '<span class="icon" style="--c:' + esc(g.color) + '">' + inner + '</span>';
+  }
 
   // ---------- who's playing ----------
   function renderWho() {
     var h = profiles.map(function (p) {
-      return '<button class="ptile" data-pid="' + esc(p.id) + '" style="--c:' + esc(p.color) + '"><span class="av">' + esc(p.avatar) + '</span><span class="nm">' + esc(p.name) + '</span><span class="ed">✏️</span></button>';
+      var last = lastPlayed(p.id), lg = last && gameById(last.id);
+      var meta = lg ? esc(lg.name) + ' · ' + ago(last.t) : 'No games yet';
+      return '<button class="ptile press" data-pid="' + esc(p.id) + '" style="--c:' + esc(p.color) + '"><span class="av">' + esc(p.avatar) + '</span><span class="nm">' + esc(p.name) + '</span><span class="meta">' + meta + '</span><span class="ed">' + SVG.pencil + '</span></button>';
     }).join('');
-    h += '<button class="ptile add" data-add="1"><span class="av">➕</span><span class="nm">New player</span></button>';
+
     $('#who').innerHTML = h;
   }
+  $('#addBtn').addEventListener('click', function () { openEditor(null); });
   $('#who').addEventListener('click', function (e) {
     var t = e.target.closest('button'); if (!t) return;
     if (t.dataset.add) return openEditor(null);
@@ -89,7 +110,7 @@
   function openEditor(p) {
     editingId = p ? p.id : null;
     draft = p ? Object.assign({}, p) : { name: '', avatar: AVATARS[(profiles.length * 5) % AVATARS.length], color: COLORS[profiles.length % COLORS.length], age: null };
-    $('#mTitle').textContent = p ? 'Edit player' : 'New player';
+    $('#mTitle').textContent = p ? 'Edit player' : 'No games yet';
     $('#mName').value = draft.name; $('#mAge').value = draft.age || '';
     $('#mDel').classList.toggle('hidden', !p || profiles.length < 2);
     renderEditor(); $('#modal').classList.remove('hidden');
@@ -115,7 +136,7 @@
     if (!editingId || profiles.length < 2) return;
     var pfx = 'hub.p.' + editingId + '.', kill = [];
     for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (k && k.indexOf(pfx) === 0) kill.push(k); }
-    kill.forEach(function (k) { localStorage.removeItem(k); });
+    kill.push('hub.recent.' + editingId); kill.forEach(function (k) { localStorage.removeItem(k); });
     var gone = profiles.filter(function (p) { return p.id === editingId; })[0];
     profiles = profiles.filter(function (p) { return p.id !== editingId; });
     if (localStorage.getItem(K.active) === editingId) localStorage.removeItem(K.active);
@@ -125,12 +146,28 @@
   // ---------- game picker ----------
   function renderGames() {
     $('#meBtn .av').textContent = me.avatar; $('#meBtn .av').style.setProperty('--c', me.color); $('#meBtn .nm').textContent = me.name;
+    var hr = new Date().getHours();
+    $('#greet').textContent = (hr < 12 ? 'Good morning' : hr < 18 ? 'Good afternoon' : 'Good evening') + ', ' + me.name;
+    var h = hist(me.id), ready = games.filter(function (g) { return g.status === 'ready'; });
+    var last = lastPlayed(me.id), newest = ready[ready.length - 1];
+    var feat = last ? gameById(last.id) : newest;
+    if (feat) {
+      var img = feat.icon ? 'games/' + feat.id + '/' + feat.icon : '';
+      $('#hero').innerHTML = '<button class="hero press" data-gid="' + esc(feat.id) + '">' + (img ? '<span class="bgimg" style="--img:url(&quot;' + esc(img) + '&quot;)"></span>' : '') +
+        '<span class="ic">' + iconHtml(feat) + '</span><span class="tx"><span class="eyebrow">' + (last ? 'Continue playing' : 'Newest game') + '</span>' +
+        '<span class="gn">' + esc(feat.name) + '</span><span class="gs">' + esc(feat.sub || '') + (last ? ' · ' + ago(last.t) : '') + '</span>' +
+        '<span class="play">' + SVG.play + (last ? 'Resume' : 'Play') + '</span></span></button>';
+    } else $('#hero').innerHTML = '';
+    $('#gcount').textContent = ready.length + ' games';
     $('#games').innerHTML = games.map(function (g) {
-      var icon = g.status === 'ready' && g.icon ? '<img alt="" src="games/' + esc(g.id) + '/' + esc(g.icon) + '">' : esc(g.emoji);
-      return '<button class="gtile ' + (g.status === 'ready' ? '' : 'soon') + '" data-gid="' + esc(g.id) + '" style="--c:' + esc(g.color) + '"><span class="ic">' + icon + '</span><span class="gn">' + esc(g.name) + '</span><span class="gs">' + esc(g.sub || '') + '</span></button>';
+      var r = h[g.id], isNew = !r && g === newest;
+      var lp = g.status !== 'ready' ? 'Coming soon' : r ? 'Played ' + ago(r.t) : 'Not played yet';
+      return '<button class="gtile press ' + (g.status === 'ready' ? '' : 'soon') + '" data-gid="' + esc(g.id) + '">' + (isNew ? '<span class="badge new">NEW</span>' : '') + iconHtml(g) +
+        '<span class="gn">' + esc(g.name) + '</span><span class="gs">' + esc(g.sub || '') + '</span><span class="lp">' + lp + '</span></button>';
     }).join('');
   }
   $('#meBtn').addEventListener('click', function () { renderWho(); show('who'); });
+  $('#hero').addEventListener('click', function (e) { var t = e.target.closest('[data-gid]'); var g = t && gameById(t.dataset.gid); if (g && g.status === 'ready') play(g); });
   $('#games').addEventListener('click', function (e) {
     var t = e.target.closest('[data-gid]'); if (!t) return;
     var g = games.filter(function (x) { return x.id === t.dataset.gid; })[0];
@@ -142,6 +179,7 @@
   var frame = $('#frame'), current = null;
   function play(g) {
     current = g;
+    try { var hh = hist(me.id), r = hh[g.id] || { n: 0 }; hh[g.id] = { t: Date.now(), n: (r.n || 0) + 1 }; LS.set('hub.recent.' + me.id, hh); } catch (e) {}
     var hb = $('#homeBtn'); hb.className = 'home ' + (g.corner || 'tl');
     var ps = $('#s-play') || frame.parentNode;
     ps.classList.toggle('inset', !g.edge); ps.style.background = '#000';
