@@ -5,5 +5,5 @@ window.HUB_GAMES = [
   {"id": "runner", "name": "Steel Bolt Rush", "sub": "Dodge the traffic", "emoji": "🛻", "color": "#ff7a1a", "status": "ready", "corner": "tl", "icon": "hub-icon.png"},
   {"id": "space", "name": "Nova Vanguard", "sub": "Space shooter", "emoji": "🚀", "color": "#2a2f8f", "status": "ready", "corner": "tr", "edge": true, "icon": "hub-icon.png"},
   {"id": "farm", "name": "Sunpatch Valley", "sub": "Farm & town", "emoji": "🌻", "color": "#3a9a4a", "corner": "tl", "status": "ready", "icon": "hub-icon.png"},
-  {"id": "castle", "name": "Neon Keep", "sub": "Castle defense", "emoji": "🏰", "color": "#5a2fd0", "corner": "tr", "status": "ready", "icon": "hub-icon.png", "edge": true}
+  {"id": "castle", "name": "Stonehold Keep", "sub": "Castle defense", "emoji": "🏰", "color": "#4a6a2a", "corner": "tr", "status": "ready", "icon": "hub-icon.png", "edge": true}
 ];
